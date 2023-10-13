@@ -5,21 +5,22 @@
       oscilator, but you can play four notes at once on this baby~
     </p>
     <p><strong>Press the Q key to stop noise</strong></p>
-    <h1>Octave</h1>
-    <input type="number" max="9" min="1" v-model="octave" />
-    <h1>Envelope</h1>
-    <h2>Attack</h2>
-    <p>The higher the value the longer it takes for the sound to reach full volume</p>
-    <input type="number" max="100" min="1" v-model="attack" />
-    <h2>Decay</h2>
-    <p>Time that it takes for the amplitude to go from 'attack volume' to 'sustain volume'</p>
-    <input type="number" max="100" min="1" v-model="decay" />
-    <h2>Sustain</h2>
-    <p>The level of amplitude (1 - 100) we are keeping as long as the key is pressed</p>
-    <input type="number" max="100" min="1" v-model="sustain" />
-    <h2>Release</h2>
-    <p>The time that it takes for the amplitude to go to 0 after the key is pressed</p>
-    <input type="number" max="100" min="1" v-model="release" />
+    <div>
+      <h2>Octave</h2>
+      <input type="number" max="9" min="1" v-model="octave" />
+    </div>
+    <div>
+      <h2>ASDR</h2>
+      <ControlPot label="Attack" v-model="attack" />
+      <p>The higher the value the longer it takes for the sound to reach full volume</p>
+      <p>Time that it takes for the amplitude to go from 'attack volume' to 'sustain volume'</p>
+      <ControlPot label="Decay" v-model="decay" />
+      <p>The level of amplitude (1 - 100) we are keeping as long as the key is pressed</p>
+      <ControlPot label="Sustain" v-model="sustain" />
+      <p>The time that it takes for the amplitude to go to 0 after the key is pressed</p>
+      <ControlPot label="Release" v-model="release" />
+      <p>The time that it takes for the amplitude to go to 0 after the key is pressed</p>
+    </div>
     <h1>Wave Type</h1>
     <select name="Wave Type" v-model="waveType">
       <option value="sin">sin</option>
@@ -35,6 +36,7 @@ import { el, type NodeRepr_t } from '@elemaudio/core'
 import teoria from 'teoria'
 import WebRenderer from '@elemaudio/web-renderer'
 import { ref } from 'vue'
+import ControlPot from '@/components/ControlPot.vue'
 
 type WaveType = 'sin' | 'saw' | 'square' | 'triangle'
 
@@ -182,6 +184,11 @@ function synthVoice(voice: Voice) {
 function render() {
   let out = el.add(...voices.map(synthVoice))
   core.render(out, out)
+  draw(out)
+}
+
+function draw(node: ElementaryNode) {
+  console.log(node)
 }
 
 core.on('load', function () {
