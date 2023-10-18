@@ -14,8 +14,11 @@
   "dependencies": {
     "@elemaudio/core": "^2.1.0",
     "@elemaudio/web-renderer": "^2.1.0",
+    "chart.js": "^4.4.0",
     "teoria": "^2.5.0",
+    "unocss": "^0.56.5",
     "vue": "^3.3.4",
+    "vue-chartjs": "^5.2.0",
     "vue-router": "^4.2.4"
   },
   "devDependencies": {

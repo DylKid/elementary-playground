@@ -1,6 +1,5 @@
 <template>
   <div class="container">
-    <h3 class="no-margins-no-padding">{{ label }}</h3>
     <div class="circle rotate" ref="circleRef">
       <div class="line"></div>
     </div>
@@ -9,6 +8,7 @@
 </template>
 
 <script lang="ts" setup>
+import mapNumberToRange from '@/lib/mapToRange'
 import { computed, onMounted, ref } from 'vue'
 
 const props = defineProps<{
@@ -37,23 +37,6 @@ function dragDiffToAngle(dragDiff: number) {
     return ANGLE_RANGE
   }
   return dragDiff
-}
-
-function mapNumberToRange(
-  input: number,
-  sourceStart: number,
-  sourceEnd: number,
-  targetStart: number,
-  targetEnd: number
-) {
-  // apply the map input-> input - sourceStart so the left endpoint shifts to the origin.
-  let out = input - sourceStart
-  // scale the interval to unit length by dividing by its length
-  out = (1 / (sourceEnd - sourceStart)) * out
-  // (3) Scale up by the desired length
-  out = (targetEnd - targetStart) * out
-  // (4) Finally shift the left endpoint
-  return out + targetStart
 }
 
 function mapValueToAngle(value: number) {

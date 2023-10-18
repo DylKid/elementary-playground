@@ -10,23 +10,58 @@
       <input type="number" max="9" min="1" v-model="octave" />
     </div>
     <div>
-      <h2>ASDR</h2>
-      <ControlPot label="Attack" v-model="attack" />
+      <h2>ADSR</h2>
+      <!-- Attack -->
+      <h3 class="m-0 p-0">Attack</h3>
+      <div>
+        <select v-model="adrRangeIndexes.a">
+          <option value="0">1-10ms</option>
+          <option value="1">10-100ms</option>
+          <option value="2">100ms-1000ms</option>
+          <option value="3">1-10s</option>
+        </select>
+      </div>
+      <ControlPot label="Attack" v-model="attackFormValue" />
       <p>The higher the value the longer it takes for the sound to reach full volume</p>
+
+      <!-- Decay -->
+      <h3 class="m-0 p-0">Decay</h3>
+      <div>
+        <select v-model="adrRangeIndexes.d">
+          <option value="0">1-10ms</option>
+          <option value="1">10-100ms</option>
+          <option value="2">100ms-1000ms</option>
+          <option value="3">1-10s</option>
+        </select>
+      </div>
+      <ControlPot label="Decay" v-model="decayFormValue" />
       <p>Time that it takes for the amplitude to go from 'attack volume' to 'sustain volume'</p>
-      <ControlPot label="Decay" v-model="decay" />
-      <p>The level of amplitude (1 - 100) we are keeping as long as the key is pressed</p>
-      <ControlPot label="Sustain" v-model="sustain" />
+
+      <!-- Sustain -->
+      <h3 class="m-0 p-0">Sustain</h3>
+      <ControlPot label="Sustain" v-model="sustainFormValue" />
+      <p>The level of amplitude (0 - 100)% we are keeping as long as the key is pressed</p>
+
+      <!-- Release -->
+      <h3 class="m-0 p-0">Release</h3>
+      <div>
+        <select v-model="adrRangeIndexes.r">
+          <option value="0">1-10ms</option>
+          <option value="1">10-100ms</option>
+          <option value="2">100ms-1000ms</option>
+          <option value="3">1-10s</option>
+        </select>
+      </div>
+      <ControlPot label="Release" v-model="releaseFormValue" />
       <p>The time that it takes for the amplitude to go to 0 after the key is pressed</p>
-      <ControlPot label="Release" v-model="release" />
-      <p>The time that it takes for the amplitude to go to 0 after the key is pressed</p>
+
+      <EnvelopeGraph :adsr="adsr" />
     </div>
     <h1>Wave Type</h1>
     <select name="Wave Type" v-model="waveType">
       <option value="sin">sin</option>
       <option value="saw">saw</option>
       <option value="square">square</option>
-      <option value="triange">triange</option>
     </select>
   </main>
 </template>
@@ -35,12 +70,65 @@
 import { el, type NodeRepr_t } from '@elemaudio/core'
 import teoria from 'teoria'
 import WebRenderer from '@elemaudio/web-renderer'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import ControlPot from '@/components/ControlPot.vue'
+import EnvelopeGraph from '@/components/EnvelopeGraph.vue'
+import mapNumberToRange from '@/lib/mapToRange'
 
-type WaveType = 'sin' | 'saw' | 'square' | 'triangle'
+type ADR = 'a' | 'd' | 'r'
+type ADRRange = '0' | '1' | '2' | '3'
 
-type ElementaryNode = number | NodeRepr_t
+// 1-10ms, 10-100ms, 100-1000ms, and 1-10s
+const RANGE_MAP: Record<ADRRange, number[]> = {
+  '0': [0.001, 0.01],
+  '1': [0.01, 0.1],
+  '2': [0.1, 1],
+  '3': [1, 10]
+}
+
+const adrRangeIndexes = ref<Record<ADR, ADRRange>>({
+  a: '2',
+  d: '2',
+  r: '2'
+})
+
+const adrRangeMap = computed(() => {
+  return {
+    a: RANGE_MAP[adrRangeIndexes.value.a],
+    d: RANGE_MAP[adrRangeIndexes.value.d],
+    r: RANGE_MAP[adrRangeIndexes.value.r]
+  }
+})
+
+function potToAdrRange(potValue: number, index: ADR) {
+  return mapNumberToRange(
+    potValue,
+    0,
+    100,
+    adrRangeMap.value[index][0],
+    adrRangeMap.value[index][1]
+  )
+}
+
+// adsr envelope from values
+const attackFormValue = ref(40)
+const decayFormValue = ref(10)
+const sustainFormValue = ref(40)
+const releaseFormValue = ref(20)
+
+// adsr envelope scaled
+const adsr = computed(() => {
+  return {
+    attack: potToAdrRange(attackFormValue.value, 'a'),
+    decay: potToAdrRange(decayFormValue.value, 'd'),
+    sustain: sustainFormValue.value / 100,
+    release: potToAdrRange(releaseFormValue.value, 'r')
+  }
+})
+
+const octave = ref(5)
+
+type WaveType = 'sin' | 'saw' | 'square'
 
 interface Voice {
   gate: number
@@ -80,13 +168,6 @@ let nextVoice = 0
 // current list of keyboard keys currently pressed, may not include the same key twice
 let keysDown: string[] = []
 
-// octave of the current note e.g. C#5
-const octave = ref(5)
-// asdr envelope
-const attack = ref(40)
-const decay = ref(10)
-const sustain = ref(40)
-const release = ref(20)
 // wave form to generate
 const waveType = ref<WaveType>('sin')
 
@@ -155,12 +236,14 @@ function turnVoiceOff(freq: number) {
 }
 
 function synthVoice(voice: Voice) {
-  const realAttack = attack.value / 10
-  const realSustain = sustain.value / 100
-  const realDecay = decay.value / 10
-  const realRelease = release.value / 10
   const gate = el.const({ key: `${voice.key}:gate`, value: 0.2 * voice.gate })
-  const env = el.adsr(realAttack, realDecay, realSustain, realRelease, gate)
+  const env = el.adsr(
+    adsr.value.attack,
+    adsr.value.decay,
+    adsr.value.sustain,
+    adsr.value.release,
+    gate
+  )
   let tone
   switch (waveType.value) {
     case 'sin':
@@ -172,9 +255,6 @@ function synthVoice(voice: Voice) {
     case 'square':
       tone = el.square(el.const({ key: `${voice.key}:freq`, value: voice.freq }))
       break
-    case 'triangle':
-      tone = el.triangle(el.const({ key: `${voice.key}:freq`, value: voice.freq }))
-      break
     default:
       tone = el.cycle(el.const({ key: `${voice.key}:freq`, value: voice.freq }))
   }
@@ -184,11 +264,6 @@ function synthVoice(voice: Voice) {
 function render() {
   let out = el.add(...voices.map(synthVoice))
   core.render(out, out)
-  draw(out)
-}
-
-function draw(node: ElementaryNode) {
-  console.log(node)
 }
 
 core.on('load', function () {
