@@ -1,9 +1,8 @@
-<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-</script>
-
 <template>
-  <header>
+  <div class="wrapper">
+    <SynthView />
+  </div>
+  <!-- <header>
     <div class="wrapper">
       <nav>
         <RouterLink to="/single-voice-synth"> Single Note Synth </RouterLink>
@@ -11,6 +10,10 @@ import { RouterLink, RouterView } from 'vue-router'
       </nav>
     </div>
   </header>
-
-  <RouterView />
+  <RouterView /> -->
 </template>
+
+<script setup lang="ts">
+import { RouterLink, RouterView } from 'vue-router'
+import SynthView from '@/views/SynthView.vue'
+</script>

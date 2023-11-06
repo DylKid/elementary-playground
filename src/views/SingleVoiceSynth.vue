@@ -4,14 +4,13 @@
       While called a 'single voice synth' what I mean is that each note pressed only uses a single
       oscilator, but you can play four notes at once on this baby~
     </p>
-    <p><strong>Press the Q key to stop noise</strong></p>
+    <!-- <p><strong>Press the Q key to stop noise</strong></p>
     <div>
       <h2>Octave</h2>
       <input type="number" max="9" min="1" v-model="octave" />
     </div>
     <div>
       <h2>ADSR</h2>
-      <!-- Attack -->
       <h3 class="m-0 p-0">Attack</h3>
       <div>
         <select v-model="adrRangeIndexes.a">
@@ -21,10 +20,9 @@
           <option value="3">1-10s</option>
         </select>
       </div>
-      <ControlPot label="Attack" v-model="attackFormValue" />
+      <PotInput label="Attack" v-model="attackFormValue" />
       <p>The higher the value the longer it takes for the sound to reach full volume</p>
 
-      <!-- Decay -->
       <h3 class="m-0 p-0">Decay</h3>
       <div>
         <select v-model="adrRangeIndexes.d">
@@ -34,15 +32,13 @@
           <option value="3">1-10s</option>
         </select>
       </div>
-      <ControlPot label="Decay" v-model="decayFormValue" />
+      <PotInput label="Decay" v-model="decayFormValue" />
       <p>Time that it takes for the amplitude to go from 'attack volume' to 'sustain volume'</p>
 
-      <!-- Sustain -->
       <h3 class="m-0 p-0">Sustain</h3>
-      <ControlPot label="Sustain" v-model="sustainFormValue" />
+      <PotInput label="Sustain" v-model="sustainFormValue" />
       <p>The level of amplitude (0 - 100)% we are keeping as long as the key is pressed</p>
 
-      <!-- Release -->
       <h3 class="m-0 p-0">Release</h3>
       <div>
         <select v-model="adrRangeIndexes.r">
@@ -52,7 +48,7 @@
           <option value="3">1-10s</option>
         </select>
       </div>
-      <ControlPot label="Release" v-model="releaseFormValue" />
+      <PotInput label="Release" v-model="releaseFormValue" />
       <p>The time that it takes for the amplitude to go to 0 after the key is pressed</p>
 
       <EnvelopeGraph :adsr="adsr" />
@@ -62,7 +58,7 @@
       <option value="sin">sin</option>
       <option value="saw">saw</option>
       <option value="square">square</option>
-    </select>
+    </select> -->
   </main>
 </template>
 
@@ -71,7 +67,7 @@ import { el, type NodeRepr_t } from '@elemaudio/core'
 import teoria from 'teoria'
 import WebRenderer from '@elemaudio/web-renderer'
 import { computed, ref } from 'vue'
-import ControlPot from '@/components/ControlPot.vue'
+import PotInput from '@/components/PotInput.vue'
 import EnvelopeGraph from '@/components/EnvelopeGraph.vue'
 import mapNumberToRange from '@/lib/mapToRange'
 

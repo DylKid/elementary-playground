@@ -13,7 +13,6 @@ import { computed, onMounted, ref } from 'vue'
 
 const props = defineProps<{
   modelValue: number
-  label: string
 }>()
 
 const circleRef = ref<HTMLElement | null>(null)
@@ -23,7 +22,7 @@ const emit = defineEmits<{
 }>()
 
 let currentAngle = ref(0)
-const currentValue = ref(props.modelValue)
+const currentValue = ref(0)
 
 const angleTransform = computed(() => {
   return currentAngle.value + 'deg'
@@ -44,6 +43,9 @@ function mapValueToAngle(value: number) {
 }
 
 onMounted(() => {
+  currentValue.value = props.modelValue
+  console.log('current value', currentValue.value)
+  console.log('props', props.modelValue)
   if (circleRef.value === null) {
     throw new Error('Circle ref reference failed')
   } else {
