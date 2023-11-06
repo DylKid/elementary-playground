@@ -1,41 +1,50 @@
 <template>
   <main>
-    <!-- <p><strong>Press the Q key to stop noise</strong></p>
-    <ADSRInput v-model="synthModel.adsr" />
-    <div>
-      <h4>Wave Type</h4>
-      <select name="Wave Type" v-model="synthModel.waveType">
-        <option value="sin">sin</option>
-        <option value="saw">saw</option>
-        <option value="square">square</option>
-      </select>
-    </div> -->
     <div>
       TODO: need to figure out how to v-model array
       <button @click="addSynth">Add Synth</button>
       <button @click="removeSynth">Remove Synth</button>
     </div>
-    <SynthConfigInput v-model="synthConfig" />
-    <SynthConfigInput v-model="synthConfig2" />
-    <!-- <div v-for="[i, synthConfig] in config"> -->
-    <!-- <SynthConfigInput v-model="synthConfig" /> -->
-    <!-- </div> -->
+    <div>
+      <div v-for="(c, index) in config" :key="'synth-config-' + index">
+        <SynthConfigInput v-model="config[index]" />
+      </div>
+    </div>
   </main>
 </template>
 
 <script setup lang="ts">
-import { el, type NodeRepr_t } from '@elemaudio/core'
+import { el } from '@elemaudio/core'
 import teoria from 'teoria'
 import WebRenderer from '@elemaudio/web-renderer'
-import { computed, onMounted, ref, watch } from 'vue'
-import ADSRInput, { type ADSR } from '@/components/ADSRInput.vue'
+import { computed, ref } from 'vue'
 import type { SynthModel, SynthConfig } from '@/lib/synth'
-import { voiceOn, voiceOff, makeVoice, synthOut } from '@/lib/synth'
+import { voiceOn, voiceOff, synthOut } from '@/lib/synth'
 import SynthConfigInput from '@/components/SynthConfigInput.vue'
 
 const config = ref<SynthConfig[]>([])
+const model: SynthModel[] = []
+
+interface SynthState {
+  config: SynthConfig
+  model: SynthModel
+}
+
+const state = computed(() => {
+  const synthState: SynthState[] = []
+  for (let i = 0; i < config.value.length; i++) {
+    synthState.push({
+      config: config.value[i],
+      model: model[i]
+    })
+  }
+  return synthState
+})
+
+let count = 0
 
 function addSynth() {
+  count++
   config.value.push({
     waveType: 'sin',
     octave: 5,
@@ -47,17 +56,21 @@ function addSynth() {
     },
     volume: 1
   })
+  model.push({
+    voices: [
+      { gate: 0.0, freq: 440, key: `v1-${count}` },
+      { gate: 0.0, freq: 440, key: `v2-${count}` },
+      { gate: 0.0, freq: 440, key: `v3-${count}` },
+      { gate: 0.0, freq: 440, key: `v4-${count}` }
+    ],
+    nextVoice: 0
+  })
 }
 
 function removeSynth() {
   config.value.pop()
+  model.pop()
 }
-
-const adsr = ref<ADSR>()
-
-watch(adsr, () => {
-  console.log('watch', JSON.parse(JSON.stringify(adsr.value)))
-})
 
 const VALID_KEYS = ['a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'y', 'h', 'u', 'j'] as const
 type ValidKey = (typeof VALID_KEYS)[number]
@@ -78,50 +91,6 @@ const NOTE_MAP: NoteMap = {
   j: 'B'
 }
 
-const synthConfig = ref<SynthConfig>({
-  waveType: 'sin',
-  octave: 5,
-  adsr: {
-    attack: 0.002,
-    decay: 0.02,
-    sustain: 80,
-    release: 0.2
-  },
-  volume: 1
-})
-
-const synthModel: SynthModel = {
-  voices: [
-    { gate: 0.0, freq: 440, key: 'v1-1' },
-    { gate: 0.0, freq: 440, key: 'v2-1' },
-    { gate: 0.0, freq: 440, key: 'v3-1' },
-    { gate: 0.0, freq: 440, key: 'v4-1' }
-  ],
-  nextVoice: 0
-}
-
-const synthConfig2 = ref<SynthConfig>({
-  waveType: 'sin',
-  octave: 5,
-  adsr: {
-    attack: 0.002,
-    decay: 0.02,
-    sustain: 80,
-    release: 0.2
-  },
-  volume: 1
-})
-
-const synthModel2: SynthModel = {
-  voices: [
-    { gate: 0.0, freq: 440, key: 'v1-2' },
-    { gate: 0.0, freq: 440, key: 'v2-2' },
-    { gate: 0.0, freq: 440, key: 'v3-2' },
-    { gate: 0.0, freq: 440, key: 'v4-2' }
-  ],
-  nextVoice: 0
-}
-
 // current list of keyboard keys currently pressed, may not include the same key twice
 let keysDown: string[] = []
 
@@ -138,13 +107,15 @@ function getFreqFromKey(key: ValidKey, octave: number): number {
 }
 
 function synthVoicesOn(key: ValidKey) {
-  voiceOn(synthModel, synthConfig.value, getFreqFromKey(key, synthConfig.value.octave))
-  voiceOn(synthModel2, synthConfig2.value, getFreqFromKey(key, synthConfig2.value.octave))
+  state.value.forEach((s) => {
+    voiceOn(s.model, s.config, getFreqFromKey(key, s.config.octave))
+  })
 }
 
 function synthVoicesOff(key: ValidKey) {
-  voiceOff(synthModel, getFreqFromKey(key, synthConfig.value.octave))
-  voiceOff(synthModel2, getFreqFromKey(key, synthConfig2.value.octave))
+  state.value.forEach((s) => {
+    voiceOff(s.model, getFreqFromKey(key, s.config.octave))
+  })
 }
 
 function setupkeyboard() {
@@ -162,9 +133,7 @@ function setupkeyboard() {
     if (isValidKey(e.key) && !keysDown.includes(e.key)) {
       // register the key, turn on a voice for that note and re-render
       keysDown.push(e.key)
-      // turnVoiceOn(freq)
       synthVoicesOn(e.key)
-
       render()
     }
   })
@@ -176,8 +145,6 @@ function setupkeyboard() {
         return key !== e.key
       })
       // turn off a voice with that frequency (because only one particular frequency can be playing at a given time this should be unique)
-      // turnVoiceOff(freq)
-      // voiceOff(synthModel.value, freq)
       synthVoicesOff(e.key)
       render()
     }
@@ -204,9 +171,10 @@ document.addEventListener('pointerdown', async function start() {
 })
 
 function render() {
-  const out1 = synthOut(synthModel, synthConfig.value)
-  const out2 = synthOut(synthModel2, synthConfig2.value)
-  const out = el.add(out1, out2)
+  const s = state.value.map((s) => {
+    return synthOut(s.model, s.config)
+  })
+  const out = el.add(...s)
   core.render(out, out)
 }
 </script>

@@ -21,9 +21,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import ADSRInput, { type ADSR } from '@/components/ADSRInput.vue'
-import type { SynthConfig, WaveType } from '@/lib/synth'
+import { onMounted, ref, watch } from 'vue'
+import ADSRInput from '@/components/ADSRInput.vue'
+import type { SynthConfig } from '@/lib/synth'
 import mapNumberToRange from '@/lib/mapToRange'
 import PotInput from './PotInput.vue'
 
@@ -45,10 +45,6 @@ const synthConfig = ref<SynthConfig>({
   volume: 1
 })
 
-// watch(synthModel.value, () => {
-//   console.log('synth model update')
-// })
-
 onMounted(() => {
   synthConfig.value = props.modelValue
 })
@@ -62,7 +58,6 @@ const emit = defineEmits<{
 }>()
 
 watch(synthConfig, () => {
-  console.log('watch ADSR (adsr input)')
   emit('update:modelValue', synthConfig.value)
 })
 </script>

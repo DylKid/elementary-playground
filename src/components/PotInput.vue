@@ -44,8 +44,8 @@ function mapValueToAngle(value: number) {
 
 onMounted(() => {
   currentValue.value = props.modelValue
-  console.log('current value', currentValue.value)
-  console.log('props', props.modelValue)
+  // console.log('current value', currentValue.value)
+  // console.log('props', props.modelValue)
   if (circleRef.value === null) {
     throw new Error('Circle ref reference failed')
   } else {

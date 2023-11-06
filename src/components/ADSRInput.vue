@@ -81,7 +81,7 @@ const RANGE_MAP: Record<ADRRangeIndex, Range> = {
   '0': { start: 0.001, end: 0.01 },
   '1': { start: 0.01, end: 0.1 },
   '2': { start: 0.1, end: 1 },
-  '3': { start: 1, end: 1 }
+  '3': { start: 1, end: 10 }
 }
 
 const attackRangeIndex = ref<ADRRangeIndex>('2')
@@ -106,6 +106,7 @@ function adrValueToPot(adrValue: number, index: ADRType) {
 
 function potValueToAdr(adrValue: number, index: ADRType) {
   const range = getAdrRange(index)
+  // (index, range)
   return mapNumberToRange(adrValue, 0, 100, range.start, range.end)
 }
 
@@ -139,6 +140,7 @@ function adrIndexFromAdrValue(adr: number) {
   }
 }
 
+// TODO: bi-directional data
 // watch(props.modelValue, () => {
 //   adrRangeIndexes.value.a = adrIndexFromAdrValue(props.modelValue.attack)
 //   adrRangeIndexes.value.d = adrIndexFromAdrValue(props.modelValue.decay)
@@ -176,7 +178,6 @@ const emit = defineEmits<{
 }>()
 
 watch(adsr, () => {
-  console.log('watch ADSR (adsr input)')
   emit('update:modelValue', adsr.value)
 })
 </script>
