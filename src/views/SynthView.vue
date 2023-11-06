@@ -1,7 +1,6 @@
 <template>
   <main>
     <div>
-      TODO: need to figure out how to v-model array
       <button @click="addSynth">Add Synth</button>
       <button @click="removeSynth">Remove Synth</button>
     </div>
