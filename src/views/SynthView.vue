@@ -6,7 +6,11 @@
     </div>
     <div>
       <div v-for="(c, index) in config" :key="'synth-config-' + index">
-        <SynthConfigInput v-model="config[index]" />
+        <SynthConfigInput
+          :model-value="config[index]"
+          @update:model-value="updateConfig($event, index)"
+        />
+        {{ config[index] }}
       </div>
     </div>
   </main>
@@ -23,6 +27,10 @@ import SynthConfigInput from '@/components/SynthConfigInput.vue'
 
 const config = ref<SynthConfig[]>([])
 const model: SynthModel[] = []
+
+function updateConfig(value: SynthConfig, index: number) {
+  config.value[index] = value
+}
 
 interface SynthState {
   config: SynthConfig
@@ -46,14 +54,14 @@ function addSynth() {
   count++
   config.value.push({
     waveType: 'sin',
-    octave: 5,
+    octave: 4,
     adsr: {
       attack: 0.002,
       decay: 0.02,
       sustain: 80,
       release: 0.2
     },
-    volume: 1
+    volume: 0.5
   })
   model.push({
     voices: [

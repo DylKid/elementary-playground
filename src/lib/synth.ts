@@ -43,12 +43,21 @@ export function voiceOff(model: SynthModel, freq: number) {
 }
 
 export function makeVoice(config: SynthConfig, voice: Voice) {
-  const gate = el.const({ key: `${voice.key}:gate`, value: 0.2 * voice.gate })
+  const gateVal = 0.2 * voice.gate
+  console.log(gateVal)
+  const gate = el.const({ key: `${voice.key}:gate`, value: gateVal })
+  console.log({
+    attack: config.adsr.attack,
+    decay: config.adsr.decay,
+    sustain: config.adsr.sustain,
+    release: config.adsr.release,
+    gate: gate
+  })
   const env = el.adsr(
-    config.adsr.attack,
-    config.adsr.decay,
-    config.adsr.sustain,
-    config.adsr.release,
+    el.const({ key: `${voice.key}:attack`, value: config.adsr.attack * 10 }),
+    el.const({ key: `${voice.key}:decay`, value: config.adsr.decay }),
+    el.const({ key: `${voice.key}:sustain`, value: config.adsr.sustain }),
+    el.const({ key: `${voice.key}:release`, value: config.adsr.release }),
     gate
   )
   let tone

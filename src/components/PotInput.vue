@@ -9,7 +9,7 @@
 
 <script lang="ts" setup>
 import mapNumberToRange from '@/lib/mapToRange'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 const props = defineProps<{
   modelValue: number
@@ -23,6 +23,12 @@ const emit = defineEmits<{
 
 let currentAngle = ref(0)
 const currentValue = ref(0)
+
+watch(props, () => {
+  console.log('watch props (Pot Input)')
+  currentValue.value = props.modelValue
+  currentAngle.value = mapValueToAngle(currentValue.value)
+})
 
 const angleTransform = computed(() => {
   return currentAngle.value + 'deg'
@@ -44,8 +50,6 @@ function mapValueToAngle(value: number) {
 
 onMounted(() => {
   currentValue.value = props.modelValue
-  // console.log('current value', currentValue.value)
-  // console.log('props', props.modelValue)
   if (circleRef.value === null) {
     throw new Error('Circle ref reference failed')
   } else {
